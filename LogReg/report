@@ -1,0 +1,26 @@
+
+Conditions:
+ 
+	- Batch Gradient Descent	
+
+__ Notes __
+
+1) If data is not normalized we get cost and gradient values of nan, but accuracy improves in almost a stable manner ???
+
+2) Adding bias terms doesn't make a noticable difference in accuracy (maybe because of normalization with 0 mean and 1 std)
+
+3) If weights are initialized randomly between [0, 1) instead of all 0, (1 - sigma) contains 0s, thus cost
+	takes nan values and gradient checking fails. But if the weights are initialized between [0.001, 0.009)
+	(1 - sigma) contains no zeros and cost doesn't take nan, thus gradient check doesn't fail. The 0 weights
+	also doesn't cause such a problem.
+
+4) Although cost take nan values and gradient checking fails when the weights are randomly initialized between [0,1), accuracy is improving 
+	in a stable manner ??? But this time accuracy won't reach to the value it would take when the weights are initialized between [0.001, 0.009),
+	assuming that the maxEpochs is not changed. Zero initialized weights gives best final accuracy.
+
+5) Batch gradient descent seems to be quite stable, doesn't hop around the minimum that much, difference between consecutive costs is almost always dropping
+
+6) There are a lot of weights with 0 value, which indicates a lot of redundant features, a feature selection step would be good. Also, the number of 0 weights
+	increase if the data is not normalized. The cause of this may be normalization, considering that it complicates the data for our case.
+
+7) Graph showing the elements of the confusion matrix is approximately symmetric, because data we use is well balanced.

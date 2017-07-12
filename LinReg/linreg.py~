@@ -1,0 +1,11 @@
+
+import numpy as np
+
+def readData(data_loc, filename):
+    """"Reads the dataset from the given location and returns it as a numpy array"""
+
+    data = np.gendatafromtxt(data_loc + name)[1:,:]
+
+    return data
+
+

@@ -1,0 +1,5 @@
+
+* While the learning rate was 0.05, the cost (and MSE) was increasing constantly. After dropping it to 1e-7,
+	cost decreased and the algorithm converged. This may be a case for logistic regression too, should investigate.
+	
+* Normaliztion doesn't seem to be necessary here, should investigate why.
