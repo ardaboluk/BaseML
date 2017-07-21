@@ -27,7 +27,6 @@ def generateFoldsReg(data, numFolds, foldNum):
 
 def trainLinReg(trainInputs, trainTargets, alpha = 0.05, maxEpochs = 1000, minCostDiff = 0.001):
     """Trains the linear regression model with the given training data and returns model parameters.
-    trainData contains target values in the last row.
     Training is stopped if maxEpochs is reached or the difference between subsequent costs is under minCostDiff."""
 
     # weight vector including the bias term
