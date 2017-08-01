@@ -1,11 +1,15 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import extractMnist
-import extractCover
 import bgd
 import folds
 import evaluate
+
+import sys
+sys.path.insert(0, '../util')
+import extractMnist
+import extractCover
+sys.path.pop(0)
 
 # determine options for batch gradient descent
 options = {"maxEpochs":200, "learningRate":0.15, "minCostDiff":0.001, "debug":False, "debugVerbose":False}
@@ -14,8 +18,8 @@ options = {"maxEpochs":200, "learningRate":0.15, "minCostDiff":0.001, "debug":Fa
 print()
 print("Data is being read...")
 print()
-[data, labels] = extractMnist.readMnist("../../Datasets/mnist/", True, digitZero = 0, digitOne = 9)
-#[data, labels] = extractCover.readCover("../../Datasets/covertype/", True, classZero = 1, classOne = 2)
+[data, labels] = extractMnist.readMnist("../../../Datasets/mnist/", True, digitZero = 0, digitOne = 9)
+#[data, labels] = extractCover.readCover("../../../Datasets/covertype/", True, classZero = 1, classOne = 2)
 
 # show an image from the MNIST (if you desired)
 #extractMnist.show(data[:,96], 28, 28)

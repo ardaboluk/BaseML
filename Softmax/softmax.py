@@ -1,13 +1,18 @@
 
 import numpy as np
 import pandas as pd
-from extractMnistMulticlass import readMnist
 from model_selection import StratifiedKFold
 from sklearn import preprocessing
 from sklearn import metrics
 from matplotlib import pyplot as plt
 import seaborn as sn
 import itertools
+
+import sys
+sys.path.insert(0, '../util')
+from extractMnistMulticlass import readMnist
+import extractCover
+sys.path.pop(0)
     
 def trainSoftmax(trainInputs, trainTargets, alpha = 12e-8, maxEpochs = 1000, minCostDiff = 0.001):
     """Trains the softmax regression model with the given training data and returns model parameters.
@@ -50,9 +55,15 @@ def trainSoftmax(trainInputs, trainTargets, alpha = 12e-8, maxEpochs = 1000, min
 numFolds = 10    
 
 # read the dataset and convert labels to one-hot
-mnist_data = readMnist("../../../Datasets/mnist")
-data = np.concatenate((mnist_data[0], mnist_data[2]), axis = 1)
-labels = np.concatenate((mnist_data[1], mnist_data[3])).reshape(-1,1)
+
+# mnist dataset
+#mnist_data = readMnist("../../../Datasets/mnist")
+#data = np.concatenate((mnist_data[0], mnist_data[2]), axis = 1)
+#labels = np.concatenate((mnist_data[1], mnist_data[3])).reshape(-1,1)
+
+# cover type dataset
+[data, labels] = extractCover.readCover('../../../Datasets/covertype/', binary_classes = False)
+labels = labels.reshape(-1,1)
 
 # one-hot encoded labels
 enc = preprocessing.OneHotEncoder()
