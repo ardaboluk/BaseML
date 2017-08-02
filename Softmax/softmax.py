@@ -1,7 +1,6 @@
 
 import numpy as np
 import pandas as pd
-from model_selection import StratifiedKFold
 from sklearn import preprocessing
 from sklearn import metrics
 from matplotlib import pyplot as plt
@@ -11,6 +10,7 @@ import itertools
 import sys
 sys.path.insert(0, '../util')
 from extractMnistMulticlass import readMnist
+from model_selection import StratifiedKFold
 import extractCover
 sys.path.pop(0)
     
@@ -39,7 +39,7 @@ def trainSoftmax(trainInputs, trainTargets, alpha = 12e-8, maxEpochs = 1000, min
 
         costDiff = abs(cost - prevCost)
 
-        #print("Epoch {} Cost {} Cost Diff {}".format(curEpoch + 1, cost, costDiff))
+        print("Epoch {} Cost {} Cost Diff {}".format(curEpoch + 1, cost, costDiff))
 
         if costDiff < minCostDiff:
             print("Cost difference is below threshold... stopping.")
