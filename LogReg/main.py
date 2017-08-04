@@ -18,7 +18,9 @@ options = {"maxEpochs":200, "learningRate":0.15, "minCostDiff":0.001, "debug":Fa
 print()
 print("Data is being read...")
 print()
-[data, labels] = extractMnist.readMnist("../../../Datasets/mnist/", True, digitZero = 0, digitOne = 9)
+mnist_data = extractMnist.readMnist("../../../Datasets/mnist/", binary_digits = True, digitZero = 0, digitOne = 9)
+data = np.concatenate((mnist_data[0], mnist_data[2]), axis = 1)
+labels = np.concatenate((mnist_data[1], mnist_data[3]))
 #[data, labels] = extractCover.readCover("../../../Datasets/covertype/", True, classZero = 1, classOne = 2)
 
 # show an image from the MNIST (if you desired)

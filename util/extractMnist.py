@@ -41,19 +41,20 @@ def readMnist(data_loc, binary_digits, digitZero = 0, digitOne = 1):
 		magic,num = struct.unpack(">II", test_labels_file.read(8))
 		test_labels = np.fromfile(test_labels_file, dtype = np.int8)	
 		
-	data = np.column_stack((train_data, test_data))
-	labels = np.concatenate((train_labels, test_labels))
-		
 	# data for digits 1 and 0
 	if binary_digits == True:
-		data = data[:, np.logical_or(labels == digitZero, labels == digitOne)]
-		labels = labels[np.logical_or(labels == digitZero, labels == digitOne)]
+		train_data = train_data[:, np.logical_or(train_labels == digitZero, train_labels == digitOne)]
+		test_data = test_data[:, np.logical_or(test_labels == digitZero, test_labels == digitOne)]
+		train_labels = train_labels[np.logical_or(train_labels == digitZero, train_labels == digitOne)]
+		test_labels = test_labels[np.logical_or(test_labels == digitZero, test_labels == digitOne)]
 		
 		# make labels 0 and 1 (logistic function gives values between 0 and 1)
-		labels[labels == digitZero] = 0
-		labels[labels == digitOne] = 1
+		train_labels[train_labels == digitZero] = 0
+		train_labels[train_labels == digitOne] = 1
+		test_labels[test_labels == digitZero] = 0
+		test_labels[test_labels == digitOne] = 1
 		
-	return [data, labels]
+	return [train_data, train_labels, test_data, test_labels]
 	
 	
 def show(pixels, rows, cols):
