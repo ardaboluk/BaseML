@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from sklearn import preprocessing
 from sklearn import metrics
 from matplotlib import pyplot as plt
@@ -10,50 +9,13 @@ import itertools
 import sys
 
 sys.path.insert(0, '../util')
-from extractMnistMulticlass import readMnist
+from extractMnist import readMnist
 from model_selection import StratifiedKFold
 import extractCover
 
+import mlp
+
 sys.path.pop(0)
-
-
-def trainMLP(trainInputs, trainTargets, alpha=12e-8, maxEpochs=1000, minCostDiff=0.001):
-    """Trains the softmax regression model with the given training data and returns model parameters.
-    Training is stopped if maxEpochs is reached or the difference between subsequent costs is under minCostDiff."""
-
-    # weight vector including the bias term
-    W = np.zeros((trainTargets.shape[0], trainInputs.shape[0]))
-
-    # prevCost as a stopping criterion
-    prevCost = 0
-
-    # epochs
-    cost = 0
-    costDiff = 0
-    for curEpoch in range(0, maxEpochs):
-
-        z = np.exp(W.dot(trainInputs))
-        zSum = np.tile(np.sum(z, axis=0), (trainTargets.shape[0], 1))
-        p = np.divide(z, zSum)
-        cost = - np.sum(np.multiply(np.log(p), trainTargets))
-        gradients = - (trainTargets - p).dot(trainInputs.T)
-
-        W -= alpha * gradients
-
-        costDiff = abs(cost - prevCost)
-
-        print("Epoch {} Cost {} Cost Diff {}".format(curEpoch + 1, cost, costDiff))
-
-        if costDiff < minCostDiff:
-            print("Cost difference is below threshold... stopping.")
-            break
-        else:
-            prevCost = cost
-
-    print("Softmax final cost {} final cost diff {}".format(cost, costDiff))
-
-    return W
-
 
 # determine the parameters
 numFolds = 10
@@ -107,11 +69,13 @@ for train_indices, test_indices in stf:
     train_data = np.vstack((train_data, np.ones((train_data.shape[1]))))
     test_data = np.vstack((test_data, np.ones((test_data.shape[1]))))
 
-    # train the softmax algorithm
-    W = trainSoftmax(train_data, train_labels, maxEpochs=100)
+    # train the mlp algorithm
+    options = {"sizeLayers": [train_data.shape[0], 100, 20, train_labels.shape[0]], "maxEpochs":200, "learningRate":12e-8, "minCostDiff":0.001}
+    mlp_4_layer = mlp.MLP(options)
+    cost = mlp_4_layer.trainMLP(train_data, train_labels)
 
     # evaluate the model
-    predictions = W.dot(test_data)
+    predictions = mlp_4_layer.predict(test_data)
 
     # collect the predictions and true labels for the final metrics
     if whole_predictions is None:
