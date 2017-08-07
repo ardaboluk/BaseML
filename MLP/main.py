@@ -18,18 +18,18 @@ import mlp
 sys.path.pop(0)
 
 # determine the parameters
-numFolds = 10
+numFolds = 7
 
 # read the dataset and convert labels to one-hot
 
 # mnist dataset
-# mnist_data = readMnist("../../../Datasets/mnist")
-# data = np.concatenate((mnist_data[0], mnist_data[2]), axis = 1)
-# labels = np.concatenate((mnist_data[1], mnist_data[3])).reshape(-1,1)
+mnist_data = readMnist("../../../Datasets/mnist", binary_digits = False)
+data = np.concatenate((mnist_data[0], mnist_data[2]), axis = 1)
+labels = np.concatenate((mnist_data[1], mnist_data[3])).reshape(-1,1)
 
 # cover type dataset
-[data, labels] = extractCover.readCover('../../../Datasets/covertype/', binary_classes=False)
-labels = labels.reshape(-1, 1)
+#[data, labels] = extractCover.readCover('../../../Datasets/covertype/', binary_classes=False)
+#labels = labels.reshape(-1, 1)
 
 # one-hot encoded labels
 enc = preprocessing.OneHotEncoder()
@@ -53,6 +53,9 @@ whole_predictions = None
 # train and test in a k-fold stratified cross-validation setting
 stf = StratifiedKFold(labels, num_folds=numFolds)
 curFold = 1
+# MLP parameters
+#dropout_keep_probs = [0.8, 0.5, 0.5]
+dropout_keep_probs = [1., 1., 1.]
 for train_indices, test_indices in stf:
 
     train_data = data[:, train_indices]
@@ -70,9 +73,10 @@ for train_indices, test_indices in stf:
     test_data = np.vstack((test_data, np.ones((test_data.shape[1]))))
 
     # train the mlp algorithm
-    options = {"sizeLayers": [train_data.shape[0], 100, 20, train_labels.shape[0]], "maxEpochs":200, "learningRate":12e-8, "minCostDiff":0.001}
+    options = {"sizeLayers": [train_data.shape[0], 500, 300, train_labels.shape[0]], "use_dropouts": True,
+            "dropouts": dropout_keep_probs, "maxEpochs":200, "learningRate":12e-8, "minCostDiff":0.001}
     mlp_4_layer = mlp.MLP(options)
-    cost = mlp_4_layer.trainMLP(train_data, train_labels)
+    mlp_4_layer.trainMLP(train_data, train_labels)
 
     # evaluate the model
     predictions = mlp_4_layer.predict(test_data)
