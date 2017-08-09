@@ -10,10 +10,10 @@ class MLP:
         # size layers states the number of neurons in each layer starting from the input layer all the way to the output layer
         # dropouts contains the keep probabilities for each layer (including the input layer)
         self.__sizeLayers = options["sizeLayers"]
-        self.__use_dropouts = options["use_dropouts"]
         self.__dropouts = options["dropouts"]
         self.__maxEpochs = options["maxEpochs"]
         self.__learningRate = options["learningRate"]
+        self.__lambda = options["lambda"]
         self.__minCostDiff = options["minCostDiff"]
         self.__numClasses = None
 
@@ -40,7 +40,7 @@ class MLP:
         # we shouldn't assign these to tf.Variables as doing this would keep the old values while we want different ones after each run()
         dropout_masks_list = []
         for i in range(len(self.__sizeLayers) - 1):
-            rand_values = tf.random_uniform(shape = [self.__sizeLayers[i], trainInputs.shape[1]], minval = -(1-1e-8), maxval = 1)
+            rand_values = tf.random_uniform(shape = [self.__sizeLayers[i], trainInputs.shape[1]], minval = 0, maxval = 1)
             dropout_masks_list.append(tf.div(tf.to_float(tf.less(rand_values, self.__dropouts[i])), self.__dropouts[i]))
 
         # feed-forward until (excluding) the softmax layer and apply dropout along the way
@@ -58,7 +58,12 @@ class MLP:
         predictions = tf.div(z, zSum)
 
         # cross-entropy cost
-        cost = - tf.reduce_sum(tf.multiply(tf.log(predictions), y))
+        # weight decay l2 regularization
+        weights_square_sum = 0
+        for i in self.__weight_matrix_list:
+            weights_square_sum += tf.reduce_sum(tf.square(i))
+            
+        cost = tf.add(- tf.reduce_sum(tf.multiply(tf.log(predictions), y)), tf.multiply(self.__lambda, weights_square_sum))
 
         # backprop phase
         opt = tf.train.GradientDescentOptimizer(self.__learningRate)
@@ -72,13 +77,16 @@ class MLP:
         prev_cost = 0
         cur_cost = prev_cost
         self.__sess = tf.Session()
-        self.__sess.run(init)        
+        self.__sess.run(init)
+        training_costs = []
         for i in range(self.__maxEpochs):
 
             # here, we shouldn't call run to get the cost, that would do the forward-pass again, which is an overhead
             _, cur_cost = self.__sess.run([train_step, cost], feed_dict = {x:trainInputs, y:trainTargets})
             cur_cost_diff = abs(cur_cost - prev_cost)
             prev_cost = cur_cost
+
+            training_costs.append(cur_cost)
             
             print("Epoch {} Cost {} Cost Diff {}".format(i+1, cur_cost, cur_cost_diff))
 
@@ -86,6 +94,8 @@ class MLP:
                 print("In Epoch {} cost difference {} is under pre-defined min-cost {}, stopping training..".format(i+1, cur_cost_diff, self.__minCostDiff))
                 break
 
+        return training_costs
+            
 
     def predict(self, testInputs):
         """Returns predictions for the given test inputs."""

@@ -1,4 +1,3 @@
 
-* TODO: test accuracy is too low, investigate why
-* TODO: add weight decay regularization
+* TODO: add stochastic gradient descent
 * TODO: compare with an equivalent tf.nn model for testing

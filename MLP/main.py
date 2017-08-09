@@ -54,8 +54,6 @@ whole_predictions = None
 stf = StratifiedKFold(labels, num_folds=numFolds)
 curFold = 1
 # MLP parameters
-#dropout_keep_probs = [0.8, 0.5, 0.5]
-dropout_keep_probs = [1., 1., 1.]
 for train_indices, test_indices in stf:
 
     train_data = data[:, train_indices]
@@ -73,10 +71,24 @@ for train_indices, test_indices in stf:
     test_data = np.vstack((test_data, np.ones((test_data.shape[1]))))
 
     # train the mlp algorithm
-    options = {"sizeLayers": [train_data.shape[0], 500, 300, train_labels.shape[0]], "use_dropouts": True,
-            "dropouts": dropout_keep_probs, "maxEpochs":200, "learningRate":12e-8, "minCostDiff":0.001}
+    dropout_keep_probs = [1., 1.]
+    options = {"sizeLayers": [train_data.shape[0], 256, train_labels.shape[0]], "dropouts": dropout_keep_probs,
+               "maxEpochs":200, "learningRate":1e-5, "lambda":0.04, "minCostDiff":0.001}
+    # initialRate is initial learning rate, lambda is weight decay parameter, exp_k is k parameter of exponential decay
     mlp_4_layer = mlp.MLP(options)
-    mlp_4_layer.trainMLP(train_data, train_labels)
+    training_costs = mlp_4_layer.trainMLP(train_data, train_labels)
+
+    # print the training accuracy
+    train_predictions = mlp_4_layer.predict(train_data)
+    train_acc = np.sum(np.argmax(train_labels, axis=0) == np.argmax(train_predictions, axis=0)) / train_labels.shape[1]
+    print("Fold {} train accuracy: {}".format(curFold, train_acc))
+
+    # print training cost graph
+    plt.plot(np.arange(start = 1, stop = len(training_costs) + 1), training_costs)
+    plt.xlabel("Epoch #")
+    plt.ylabel("Loss")
+    plt.title("Training Loss")
+    plt.show()
 
     # evaluate the model
     predictions = mlp_4_layer.predict(test_data)
