@@ -14,7 +14,7 @@ class MLP:
         self.__maxEpochs = options["maxEpochs"]
         self.__learningRate = options["learningRate"]
         self.__lambda = options["lambda"]
-        self.__minCostDiff = options["minCostDiff"]
+        self.__batchSize = options["batchSize"]
         self.__numClasses = None
 
         self.__sess = None
@@ -40,7 +40,7 @@ class MLP:
         # we shouldn't assign these to tf.Variables as doing this would keep the old values while we want different ones after each run()
         dropout_masks_list = []
         for i in range(len(self.__sizeLayers) - 1):
-            rand_values = tf.random_uniform(shape = [self.__sizeLayers[i], trainInputs.shape[1]], minval = 0, maxval = 1)
+            rand_values = tf.random_uniform(shape = [self.__sizeLayers[i], tf.shape(x)[1]], minval = 0, maxval = 1)
             dropout_masks_list.append(tf.div(tf.to_float(tf.less(rand_values, self.__dropouts[i])), self.__dropouts[i]))
 
         # feed-forward until (excluding) the softmax layer and apply dropout along the way
@@ -74,27 +74,37 @@ class MLP:
         init = tf.global_variables_initializer()
 
         # train the model
-        prev_cost = 0
-        cur_cost = prev_cost
         self.__sess = tf.Session()
         self.__sess.run(init)
-        training_costs = []
+        training_losses = []
+        # number of batches
+        total_batch = int(np.ceil(trainInputs.shape[1] / self.__batchSize))
         for i in range(self.__maxEpochs):
 
-            # here, we shouldn't call run to get the cost, that would do the forward-pass again, which is an overhead
-            _, cur_cost = self.__sess.run([train_step, cost], feed_dict = {x:trainInputs, y:trainTargets})
-            cur_cost_diff = abs(cur_cost - prev_cost)
-            prev_cost = cur_cost
+            cur_batch_start_index = 0
+            sum_loss = 0
 
-            training_costs.append(cur_cost)
+            for j in range(total_batch):
+
+                if cur_batch_start_index + self.__batchSize >= trainTargets.shape[1]:
+                    train_inputs_batch = trainInputs[:, cur_batch_start_index : trainInputs.shape[1]]
+                    train_targets_batch = trainTargets[:, cur_batch_start_index : trainInputs.shape[1]]
+                else:                
+                    train_inputs_batch = trainInputs[:, cur_batch_start_index : cur_batch_start_index + self.__batchSize]
+                    train_targets_batch = trainTargets[:, cur_batch_start_index : cur_batch_start_index + self.__batchSize]
+
+                # here, we shouldn't call run to get the cost, that would do the forward-pass again, which is an overhead
+                _, cur_loss = self.__sess.run([train_step, cost], feed_dict = {x:train_inputs_batch, y:train_targets_batch})
+                sum_loss += cur_loss
             
-            print("Epoch {} Cost {} Cost Diff {}".format(i+1, cur_cost, cur_cost_diff))
+                cur_batch_start_index += self.__batchSize
 
-            if  cur_cost_diff <= self.__minCostDiff:
-                print("In Epoch {} cost difference {} is under pre-defined min-cost {}, stopping training..".format(i+1, cur_cost_diff, self.__minCostDiff))
-                break
+            # add current cost to the list for later plotting of the training loss
+            avg_loss = sum_loss / total_batch
+            print("Epoch {} Loss {}".format(i+1, avg_loss))
+            training_losses.append(avg_loss)
 
-        return training_costs
+        return training_losses
             
 
     def predict(self, testInputs):

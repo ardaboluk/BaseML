@@ -53,7 +53,7 @@ whole_predictions = None
 # train and test in a k-fold stratified cross-validation setting
 stf = StratifiedKFold(labels, num_folds=numFolds)
 curFold = 1
-# MLP parameters
+training_losses = []
 for train_indices, test_indices in stf:
 
     train_data = data[:, train_indices]
@@ -71,26 +71,23 @@ for train_indices, test_indices in stf:
     test_data = np.vstack((test_data, np.ones((test_data.shape[1]))))
 
     # train the mlp algorithm
+    # MLP parameters
+    # lambda is weight decay parameter
     dropout_keep_probs = [1., 1.]
     options = {"sizeLayers": [train_data.shape[0], 256, train_labels.shape[0]], "dropouts": dropout_keep_probs,
-               "maxEpochs":200, "learningRate":1e-5, "lambda":0.04, "minCostDiff":0.001}
-    # initialRate is initial learning rate, lambda is weight decay parameter, exp_k is k parameter of exponential decay
+               "maxEpochs":30, "learningRate":1e-3, "lambda":0.04, "batchSize": 100}
+    # mini-batch gradient descent made a HUGE difference
+    # it doesn't trying to directly converge to a local minimum, instead jumps over multiple local minimums and, hopefully, moves towards the global minimum 
+    # also, in batch gradient descent, gradients are accumulated over the whole dataset, thus very sensitive to the learning rate
     mlp_4_layer = mlp.MLP(options)
-    training_costs = mlp_4_layer.trainMLP(train_data, train_labels)
+    training_losses.append(mlp_4_layer.trainMLP(train_data, train_labels))
 
     # print the training accuracy
     train_predictions = mlp_4_layer.predict(train_data)
     train_acc = np.sum(np.argmax(train_labels, axis=0) == np.argmax(train_predictions, axis=0)) / train_labels.shape[1]
     print("Fold {} train accuracy: {}".format(curFold, train_acc))
 
-    # print training cost graph
-    plt.plot(np.arange(start = 1, stop = len(training_costs) + 1), training_costs)
-    plt.xlabel("Epoch #")
-    plt.ylabel("Loss")
-    plt.title("Training Loss")
-    plt.show()
-
-    # evaluate the model
+    # evaluate the model on the test data
     predictions = mlp_4_layer.predict(test_data)
 
     # collect the predictions and true labels for the final metrics
@@ -110,7 +107,18 @@ for train_indices, test_indices in stf:
 
 # calculate and print average accuracy
 avg_acc /= numFolds
-print("Average accuracy {}".format(avg_acc))
+print("Average test accuracy {}".format(avg_acc))
+
+# plot training losses
+plt.figure()
+for i in range(len(training_losses)):
+    plt.plot(np.arange(start = 1, stop = len(training_losses[i]) + 1), training_losses[i], label = "Fold {}".format(i))
+plt.xlabel("Epoch #")
+plt.ylabel("Loss")
+plt.title("Training Loss")
+plt.legend(loc = 1)
+plt.show()
+
 
 # calculate and plot confusion matrix
 conf_mat = metrics.confusion_matrix(np.argmax(whole_true_labels, axis=0), np.argmax(whole_predictions, axis=0))
@@ -120,7 +128,7 @@ plt.figure()
 sn.heatmap(df_cm, annot=True)
 plt.show()
 
-# calculate and plot precision-recall and roc curves for each class'
+# calculate and plot precision-recall roc curves for each class'
 plt.figure(1)
 plt.xlabel("Recall")
 plt.ylabel("Precision")
