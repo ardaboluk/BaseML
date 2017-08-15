@@ -54,6 +54,16 @@ whole_predictions = None
 stf = StratifiedKFold(labels, num_folds=numFolds)
 curFold = 1
 training_losses = []
+# MLP parameters
+# lambda is weight decay parameter
+dropout_keep_probs = [1., 1., 1.]
+options = {"sizeLayers": [data.shape[0] + 1, 128, labels.shape[0]], "dropouts": dropout_keep_probs,
+           "maxEpochs":20, "learningRate":1e-3, "lambda":0.04, "batchSize": 100}
+# define the mlp and construct the graph
+mlp_4_layer = mlp.MLP(options)
+mlp_4_layer.constructTrainingGraph(num_classes = labels.shape[0], num_features = data.shape[0] + 1)
+mlp_4_layer.constructPredictionsGraph()
+
 for train_indices, test_indices in stf:
 
     train_data = data[:, train_indices]
@@ -71,15 +81,9 @@ for train_indices, test_indices in stf:
     test_data = np.vstack((test_data, np.ones((test_data.shape[1]))))
 
     # train the mlp algorithm
-    # MLP parameters
-    # lambda is weight decay parameter
-    dropout_keep_probs = [1., 1.]
-    options = {"sizeLayers": [train_data.shape[0], 256, train_labels.shape[0]], "dropouts": dropout_keep_probs,
-               "maxEpochs":30, "learningRate":1e-3, "lambda":0.04, "batchSize": 100}
     # mini-batch gradient descent made a HUGE difference
     # it doesn't trying to directly converge to a local minimum, instead jumps over multiple local minimums and, hopefully, moves towards the global minimum 
-    # also, in batch gradient descent, gradients are accumulated over the whole dataset, thus very sensitive to the learning rate
-    mlp_4_layer = mlp.MLP(options)
+    # also, in batch gradient descent, gradients are accumulated over the whole dataset, thus very sensitive to the learning rate    
     training_losses.append(mlp_4_layer.trainMLP(train_data, train_labels))
 
     # print the training accuracy
