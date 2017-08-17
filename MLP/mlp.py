@@ -99,6 +99,11 @@ class MLP:
         training_losses = []
         # number of batches
         total_batch = int(np.ceil(trainInputs.shape[1] / self.__batchSize))
+
+        # shuffle the data at the beginning of each epoch
+        shuffle_index = np.random.permutation(trainTargets.shape[1])
+        trainInputs = trainInputs[:,shuffle_index]
+        trainTargets = trainTargets[:, shuffle_index]
         
         for i in range(self.__maxEpochs):
 

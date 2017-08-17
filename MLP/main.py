@@ -56,9 +56,9 @@ curFold = 1
 training_losses = []
 # MLP parameters
 # lambda is weight decay parameter
-dropout_keep_probs = [1., 1., 1.]
+dropout_keep_probs = [1., 1.]
 options = {"sizeLayers": [data.shape[0] + 1, 128, labels.shape[0]], "dropouts": dropout_keep_probs,
-           "maxEpochs":20, "learningRate":1e-3, "lambda":0.04, "batchSize": 100}
+           "maxEpochs":30, "learningRate":1e-3, "lambda":0.04, "batchSize": 100}
 # define the mlp and construct the graph
 mlp_4_layer = mlp.MLP(options)
 mlp_4_layer.constructTrainingGraph(num_classes = labels.shape[0], num_features = data.shape[0] + 1)
