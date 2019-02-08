@@ -7,7 +7,7 @@ def readData(data_loc, delim=","):
     """"Reads the dataset from the given location and returns it as a numpy array.
     Data is stroed as column-major matrix, that is, features are in rows."""
 
-    data = np.genfromtxt(data_loc, delimiter=delim)[1:,:]
+    data = np.genfromtxt(data_loc, delimiter=delim)
 
     return data.T
 
@@ -57,14 +57,14 @@ def trainLinReg(trainInputs, trainTargets, alpha = 0.05, maxEpochs = 1000, minCo
 def main():
 
     numFolds = 10
-    alpha = 12e-10 # for non-standardized
-    #alpha = 76e-5 # for standardized
+    #alpha = 12e-10 # for non-standardized
+    alpha = 76e-5 # for standardized
     maxEpochs = 10000
     minCostDiff = 0.0001
     data = readData("../../Datasets/concrete/concrete.csv", delim=",")
 
     verbose = True
-    normalize = False
+    normalize = True
 
     # shuffle the data
     tData = data.T
